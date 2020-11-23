@@ -30,7 +30,13 @@ class BuildProto(setuptools.Command):
             data = re.sub("^(import .*_pb2)", r"from . \1", data, flags=re.MULTILINE)
             with open(pb2_file, 'w') as f:
                 f.write(data)
-
+        
+        # This is a horrible hack; it may be fixed in the latest protoc
+        with open('cartaicdproto/enums_pb2.py') as f:
+            data = f.read()
+        data = re.sub("^None = 0$", "globals()['None'] = 0", data, flags=re.MULTILINE)
+        with open('cartaicdproto/enums_pb2.py', 'w') as f:
+            f.write(data)
         
 class BuildPy (build_py_orig):
     def run(self):
