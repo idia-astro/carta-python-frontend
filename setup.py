@@ -15,18 +15,21 @@ class BuildProto(setuptools.Command):
     def run(self):
         proto_files = glob.glob('carta-protobuf/*/*.proto')
         proto_dirs = set(os.path.dirname(f) for f in proto_files)
+        includes = [f"-I{d}" for d in proto_dirs]
+        subprocess.run([
+            'protoc',
+            *includes,
+            '--python_out=cartaicdproto/',
+            *proto_files,
+        ])
         
-        for proto_dir in proto_dirs:
-            includes = [f"-I{d}" for d in proto_dirs]
-            destination = os.path.join("cartaicdproto", os.path.basename(proto_dir))
-            proto_files = glob.glob(os.path.join(proto_dir, "*.proto"))
-        
-            subprocess.run([
-                'protoc',
-                *includes,
-                f'--python_out={destination}',
-                *proto_files,
-            ])
+        # There seriously isn't a better way to fix this relative import as of time of writing
+        for pb2_file in glob.glob('cartaicdproto/*_pb2.py'):
+            with open(pb2_file) as f:
+                data = f.read()
+            data = re.sub("^(import .*_pb2)", r"from . \1", data, flags=re.MULTILINE)
+            with open(pb2_file, 'w') as f:
+                f.write(data)
 
         
 class BuildPy (build_py_orig):
