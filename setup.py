@@ -23,13 +23,18 @@ class BuildProto(setuptools.Command):
             *proto_files,
         ])
         
-        # There seriously isn't a better way to fix this relative import as of time of writing
-        for pb2_file in glob.glob('cartaicdproto/*_pb2.py'):
-            with open(pb2_file) as f:
-                data = f.read()
-            data = re.sub("^(import .*_pb2)", r"from . \1", data, flags=re.MULTILINE)
-            with open(pb2_file, 'w') as f:
-                f.write(data)
+        with open('cartaicdproto/__init__.py', 'w') as initfile:
+            for pb2_file in glob.glob('cartaicdproto/*_pb2.py'):
+                # There seriously isn't a better way to fix this relative import as of time of writing
+                with open(pb2_file) as f:
+                    data = f.read()
+                data = re.sub("^(import .*_pb2)", r"from . \1", data, flags=re.MULTILINE)
+                with open(pb2_file, 'w') as f:
+                    f.write(data)
+                    
+                # We also automatically import all the submodules to allow discovery    
+                submodule = os.path.splitext(os.path.basename(pb2_file))[0]
+                initfile.write(f"from . import {submodule} as {submodule[:-4]}\n")
         
         # This is a horrible hack; it may be fixed in the latest protoc
         with open('cartaicdproto/enums_pb2.py') as f:
@@ -62,6 +67,9 @@ setuptools.setup(
         "Operating System :: OS Independent",
     ],
     python_requires='>=3.6',
+    install_requires=[
+        "websockets>=8.1",
+    ],
     cmdclass={
         "build_py": BuildPy,
         "build_proto": BuildProto,
