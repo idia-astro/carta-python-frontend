@@ -52,14 +52,14 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setuptools.setup(
-    name="carta_frontend",
+    name="cartaicd",
     version="0.0.1",
     author="Adrianna Pińska",
     author_email="adrianna.pinska@gmail.com",
     description="Python interface to the CARTA backend",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/idia-astro/carta-python-frontend",
+    url="https://github.com/idia-astro/carta-python-icd",
     packages=setuptools.find_packages(),
     classifiers=[
         "Programming Language :: Python :: 3",
