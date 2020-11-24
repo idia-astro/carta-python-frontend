@@ -1,5 +1,5 @@
-CARTA Python Frontend
----------------------
+CARTA Python Frontend/Backend Interface
+---------------------------------------
 
 A simple Python library for communicating with the CARTA backend using the protocol buffer messages defined in the frontend/backend ICD and found in `carta-protobuf`. Under construction. Intended for simple interactive tests; may be useful for automated testing.
 
