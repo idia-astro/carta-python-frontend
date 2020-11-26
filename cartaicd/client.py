@@ -2,8 +2,6 @@ import asyncio
 import re
 import struct
 import uuid
-import threading
-import queue
 
 import numpy as np
 import websockets
@@ -30,15 +28,11 @@ HEADER = struct.Struct('HHI')
 class Client:
     def __init__(self, host, port):
         self.url = f"ws://{host}:{port}/websocket"
-        self.send_queue = queue.Queue()
-        self._stop = False
+        self.sent_history = []
+        self.received_history = []
 
-        # TODO handle matching replies
         asyncio.get_event_loop().run_until_complete(self.connect(self.url))
         asyncio.get_event_loop().run_until_complete(self.register())
-        
-        t = threading.Thread(target=asyncio.get_event_loop().run_until_complete, args=(asyncio.gather(self.listen(), self.send_messages()),))
-        t.start()
         
     async def connect(self, url):
         self.socket = await websockets.connect(url, ping_interval=None)
@@ -48,35 +42,39 @@ class Client:
         message.session_id = np.uint32(uuid.uuid4().int % np.iinfo(np.uint32()).max) # why?
         
         await self.send_(message)
+        self.sent_history.append(message)
         data = await self.socket.recv()
         
         reply = self.unpack(data)
-        print("RECEIVED", reply)
+        print("RECEIVED", reply.__class__.__name__)
+        self.received_history.append(reply)
                 
     async def send_(self, message):
-        print("SENDING", message)
+        print("SENDING", message.__class__.__name__)
         await self.socket.send(self.pack(message))
+        self.sent_history.append(message)
         
     def send(self, message):
-        self.send_queue.put(message)
+        asyncio.get_event_loop().run_until_complete(self.send_(message))
                 
-    async def listen(self):
-        while not self._stop:
-            data = await self.socket.recv()
-            message = self.unpack(data)
-            print("RECEIVED", message)
-            
-    async def send_messages(self):
-        while not self._stop:
+    async def receive_(self):
+        messages = []
+        
+        while True:
             try:
-                message = self.send_queue.get()
-                await self.send_(message)
-            except queue.Empty:
-                pass
-            await asyncio.sleep(10)
-    
-    def stop(self):
-        self._stop = True
+                data = await asyncio.wait_for(self.socket.recv(), timeout=1)
+                message = self.unpack(data)
+                print("RECEIVED", message.__class__.__name__)
+                messages.append(message)
+                await asyncio.sleep(1)
+            except asyncio.TimeoutError:
+                break
+        
+        self.received_history.extend(messages)
+        return messages
+            
+    def receive(self):
+        return asyncio.get_event_loop().run_until_complete(self.receive_())
         
     def pack(self, message):
         try:
@@ -99,5 +97,7 @@ class Client:
         message.ParseFromString(data[8:])
         
         return message
-        
-        
+    
+    def clear(self):
+        self.sent_history = []
+        self.received_history = []
