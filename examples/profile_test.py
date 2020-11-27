@@ -100,7 +100,18 @@ for p in last.profiles:
         try:
             expected = image_profile[f"mm_{p.coordinate}"][downsampled(p.start):downsampled(p.end)]
         except KeyError:
-            sys.exit("Something weird happened; we received a downsampled profile but there are no mipmaps in the file.")
+            # Assume decimated profile
+            round_start = int(np.ceil(p.start / (p.mip * 2)) * p.mip * 2)
+            round_end = int(np.ceil(p.end / (p.mip * 2)) * p.mip * 2)
+            full = image_profile[p.coordinate][round_start:round_end]
+            expected = []
+            for i in range(0, full.size, p.mip * 2):
+                block = full[i:i+p.mip * 2]
+                minpos = np.where(block == block.min())[0][0]
+                maxpos = np.where(block == block.max())[0][-1]
+                positions = sorted([minpos, maxpos])
+                expected.extend(block[positions])
+            expected = np.array(expected)
         
     if not np.array_equal(got, expected):
         print("Got", len(got), "values:\n", got)
