@@ -54,6 +54,10 @@ if mipmap_data is not None:
 # Create the client -- this automatically connects and registers with the backend
 client = Client("localhost", 3002, 18)
 
+ack = client.received_history[-1]
+if "Invalid ICD version number" in ack.message:
+    sys.exit(ack.message)
+
 file_dir, file_name = os.path.split(file_path)
 
 # You have to construct the message objects yourself, but don't worry about the event headers -- the client will add them automatically.
