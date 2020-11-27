@@ -52,7 +52,7 @@ if mipmap_data is not None:
     image_profile["mm_y"] = mipmap_data[:, downsampled(args.x)]
     
 # Create the client -- this automatically connects and registers with the backend
-client = Client("localhost", 3002)
+client = Client("localhost", 3002, 18)
 
 file_dir, file_name = os.path.split(file_path)
 

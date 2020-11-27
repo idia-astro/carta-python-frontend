@@ -22,12 +22,10 @@ for cp_key, cp_val in cp.__dict__.items():
                     MSG_CLASS_TO_EVENT_TYPE[val] = event_type
                     EVENT_TYPE_TO_MSG_CLASS[event_type] = val
 
-ICD_VERSION = 17
-HEADER = struct.Struct('HHI')
-
 class Client:
-    def __init__(self, host, port):
+    def __init__(self, host, port, icd_version):
         self.url = f"ws://{host}:{port}/websocket"
+        self.icd_version = icd_version
         self.sent_history = []
         self.received_history = []
 
@@ -82,12 +80,12 @@ class Client:
         except KeyError:
             raise ValueError(f"{message.__class__.__name__} is not a valid event class.")
         
-        header = HEADER.pack(event_type, ICD_VERSION, uuid.uuid4().int % np.iinfo(np.uint32()).max) # why? session_id?
+        header = struct.Struct('HHI').pack(event_type, self.icd_version, uuid.uuid4().int % np.iinfo(np.uint32()).max)
         
         return header + message.SerializeToString()
         
     def unpack(self, data):
-        event_type, icd_version, message_id = HEADER.unpack(data[:8])
+        event_type, icd_version, message_id = struct.Struct('HHI').unpack(data[:8])
         try:
             event_class = EVENT_TYPE_TO_MSG_CLASS[event_type]
         except KeyError:
