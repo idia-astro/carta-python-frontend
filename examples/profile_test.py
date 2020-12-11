@@ -52,7 +52,7 @@ if mipmap_data is not None:
     image_profile["mm_y"] = mipmap_data[:, downsampled(args.x)]
     
 # Create the client -- this automatically connects and registers with the backend
-client = Client("localhost", 3002, 18)
+client = Client("localhost", 3002, 19)
 
 ack = client.received_history[-1]
 if "Invalid ICD version number" in ack.message:
