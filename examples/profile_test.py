@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-# Usage example: testing changes to the spatial profile implementation. This requires ICD version > 18.0. To change the version, check out the appropriate version of the carta-protobuf submodule, and reinstall this module with pip. That will automatically regenerate the protocol buffer code.
+# Usage example: testing changes to the spatial profile implementation. This requires ICD version >= 20. To change the version, check out the appropriate version of the carta-protobuf submodule, and reinstall this module with pip. That will automatically regenerate the protocol buffer code.
 
 import os
 import argparse
